@@ -5,7 +5,6 @@
 //
 
 #include "cocPoly2Tri.h"
-#include "poly2tri.h"
 
 using namespace std;
 
@@ -17,38 +16,98 @@ Poly2Tri::Poly2Tri() {
 }
 
 Poly2Tri::~Poly2Tri() {
-    //
+    clearBounds();
+    clearPoints();
+    clearHoles();
+    clearTriangles();
 }
 
 //-----------------------------------------------------------------------
-void Poly2Tri::setBounds(const std::vector<glm::vec2> & boundsPoly) {
-    bounds = boundsPoly;
-}
-
-void Poly2Tri::setPoints(const std::vector<glm::vec2> & meshPoints) {
-    points = meshPoints;
-}
-
-void Poly2Tri::addPoint(const glm::vec2 & meshPoint) {
-    points.push_back(meshPoint);
+void Poly2Tri::clearBounds() {
+    for(int i=0; i<bounds.size(); i++) {
+        delete bounds[i];
+    }
+    bounds.clear();
 }
 
 void Poly2Tri::clearPoints() {
+    for(int i=0; i<points.size(); i++) {
+        delete points[i];
+    }
     points.clear();
 }
 
-void Poly2Tri::addHole(const std::vector<glm::vec2> & holePoly) {
-    holes.push_back(holePoly);
+void Poly2Tri::clearHoles() {
+    for(int i=0; i<holes.size(); i++) {
+        vector<p2t::Point *> & hole = holes[i];
+        for(int j=0; j<hole.size(); j++) {
+            delete hole[j];
+        }
+    }
+    holes.clear();
 }
 
-void Poly2Tri::clearHoles() {
-    holes.clear();
+void Poly2Tri::clearTriangles() {
+    for(int i=0; i<triangles.size(); i++) {
+        delete triangles[i];
+    }
+    triangles.clear();
+}
+
+//-----------------------------------------------------------------------
+void Poly2Tri::setBoundsRect(coc::Rect rect) {
+    setBoundsRect(rect.getX(), rect.getY(), rect.getW(), rect.getH());
+}
+
+void Poly2Tri::setBoundsRect(glm::vec2 pos, glm::vec2 size) {
+    setBoundsRect(pos.x, pos.y, size.x, size.y);
+}
+
+void Poly2Tri::setBoundsRect(float x, float y, float w, float h) {
+    vector<glm::vec2> poly;
+    poly.push_back(glm::vec2(x, y));
+    poly.push_back(glm::vec2(x + w, y));
+    poly.push_back(glm::vec2(x + w, y + h));
+    poly.push_back(glm::vec2(x, y + h));
+    setBoundsPoly(poly);
+}
+
+void Poly2Tri::setBoundsPoly(const std::vector<glm::vec2> & boundsPoly) {
+    clearBounds();
+    
+    for(int i=0; i<boundsPoly.size(); i++) {
+        bounds.push_back(new p2t::Point(boundsPoly[i].x, boundsPoly[i].y));
+    }
+}
+
+//-----------------------------------------------------------------------
+void Poly2Tri::setPoints(const std::vector<glm::vec2> & meshPoints) {
+    clearPoints();
+
+    for(int i=0; i<meshPoints.size(); i++) {
+        addPoint(meshPoints[i]);
+    }
+}
+
+void Poly2Tri::addPoint(const glm::vec2 & meshPoint) {
+    points.push_back(new p2t::Point(meshPoint.x, meshPoint.y));
+}
+
+//-----------------------------------------------------------------------
+void Poly2Tri::addHole(const std::vector<glm::vec2> & holePoly) {
+    vector<p2t::Point *> hole;
+
+    for(int i=0; i<holePoly.size(); i++) {
+        hole.push_back(new p2t::Point(holePoly[i].x, holePoly[i].y));
+    }
+    
+    holes.push_back(hole);
 }
 
 //-----------------------------------------------------------------------
 void Poly2Tri::update() {
     
-    triangles.clear();
+    clearTriangles();
     
     if(bounds.size() < 3) {
         return; // need at least 3 points to create a bounds.
@@ -58,50 +117,23 @@ void Poly2Tri::update() {
         return; // no points to triangulate with.
     }
 
-    vector<p2t::Point *> p2tBounds;
-    for(int i=0; i<bounds.size(); i++) {
-        p2tBounds.push_back(new p2t::Point(bounds[i].x, bounds[i].y));
-    }
-    
-    p2t::CDT cdt(p2tBounds);
+    p2t::CDT cdt(bounds);
     
     for(int i=0; i<points.size(); i++) {
-        cdt.AddPoint(new p2t::Point(points[i].x, points[i].y));
+        cdt.AddPoint(points[i]);
     }
     
     for(int i=0; i<holes.size(); i++) {
-        vector<p2t::Point *> p2tHole;
-        
-        for(int j=0; j<holes[i].size(); j++) {
-            p2tHole.push_back(new p2t::Point(holes[i][j].x, holes[i][j].y));
-        }
-        
-        cdt.AddHole(p2tHole);
+        cdt.AddHole(holes[i]);
     }
     
     cdt.Triangulate();
     
-    std::vector<p2t::Triangle *> p2tTriangles = cdt.GetTriangles();
-    for(int i=0; i<p2tTriangles.size(); i++){
-        p2t::Triangle * triangleNew = p2tTriangles[i];
-        
-        triangles.push_back(p2tTriangle());
-        p2tTriangle & triangle = triangles.back();
-        
-        for(int j=0; j<triangle.points.size(); j++) {
-            triangle.points[j]->x = triangleNew->GetPoint(0)->x;
-            triangle.points[j]->y = triangleNew->GetPoint(0)->y;
-        }
-    }
-    
-    for(int i=0; i<p2tBounds.size(); i++) {
-        delete p2tBounds[i];
-    }
-    p2tBounds.clear();
+    triangles = cdt.GetTriangles();
 }
 
 //-----------------------------------------------------------------------
-const std::vector<p2tTriangle> & Poly2Tri::getTriangles() const {
+const std::vector<p2t::Triangle *> & Poly2Tri::getTriangles() const {
     return triangles;
 }
 

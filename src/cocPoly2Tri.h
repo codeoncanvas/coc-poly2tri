@@ -7,23 +7,9 @@
 #pragma once
 
 #include "cocCore.h"
+#include "poly2tri.h"
 
 namespace coc {
-
-//-----------------------------------------------------------------------
-class p2tTriangle {
-public:
-    p2tTriangle() {
-        points.push_back(&p0);
-        points.push_back(&p1);
-        points.push_back(&p2);
-    }
-    
-    glm::vec2 p0;
-    glm::vec2 p1;
-    glm::vec2 p2;
-    std::vector<glm::vec2 *> points;
-};
 
 //-----------------------------------------------------------------------
 class Poly2Tri {
@@ -33,24 +19,31 @@ public:
     Poly2Tri();
     ~Poly2Tri();
     
-    void setBounds(const std::vector<glm::vec2> & boundsPoly);
+    void clearBounds();
+    void clearPoints();
+    void clearHoles();
+    void clearTriangles();
+
+    void setBoundsRect(coc::Rect rect);;
+    void setBoundsRect(glm::vec2 pos, glm::vec2 size);
+    void setBoundsRect(float x, float y, float w, float h);
+    void setBoundsPoly(const std::vector<glm::vec2> & boundsPoly);
     
     void setPoints(const std::vector<glm::vec2> & meshPoints);
     void addPoint(const glm::vec2 & meshPoint);
-    void clearPoints();
     
     void addHole(const std::vector<glm::vec2> & holePoly);
-    void clearHoles();
     
     void update();
-    const std::vector<p2tTriangle> & getTriangles() const;
+    
+    const std::vector<p2t::Triangle *> & getTriangles() const;
     
 protected:
 
-    std::vector<glm::vec2> bounds;
-    std::vector<glm::vec2> points;
-    std::vector<std::vector<glm::vec2>> holes;
-    std::vector<p2tTriangle> triangles;
+    std::vector<p2t::Point *> bounds;
+    std::vector<p2t::Point *> points;
+    std::vector<std::vector<p2t::Point *>> holes;
+    std::vector<p2t::Triangle *> triangles;
 };
 
 };
