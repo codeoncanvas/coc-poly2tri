@@ -23,6 +23,7 @@ public:
     void clearPoints();
     void clearHoles();
     void clearTriangles();
+    void clearCDT();
 
     void setBoundsRect(coc::Rect rect);;
     void setBoundsRect(glm::vec2 pos, glm::vec2 size);
@@ -36,7 +37,7 @@ public:
     
     void update();
     
-    const std::vector<p2t::Triangle *> & getTriangles() const;
+    std::vector<p2t::Triangle *> getTriangles() const;
     
 protected:
 
@@ -44,6 +45,14 @@ protected:
     std::vector<p2t::Point *> points;
     std::vector<std::vector<p2t::Point *>> holes;
     std::vector<p2t::Triangle *> triangles;
+    p2t::CDT * cdt;
+    
+public:
+
+    static glm::vec2 toGlm(const p2t::Point & point) {
+        return glm::vec2(point.x, point.y);
+    }
+
 };
 
 };

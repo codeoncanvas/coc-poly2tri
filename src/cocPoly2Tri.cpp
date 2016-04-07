@@ -12,7 +12,7 @@ namespace coc {
 
 //-----------------------------------------------------------------------
 Poly2Tri::Poly2Tri() {
-    //
+    cdt = NULL;
 }
 
 Poly2Tri::~Poly2Tri() {
@@ -20,6 +20,7 @@ Poly2Tri::~Poly2Tri() {
     clearPoints();
     clearHoles();
     clearTriangles();
+    clearCDT();
 }
 
 //-----------------------------------------------------------------------
@@ -48,10 +49,19 @@ void Poly2Tri::clearHoles() {
 }
 
 void Poly2Tri::clearTriangles() {
-    for(int i=0; i<triangles.size(); i++) {
-        delete triangles[i];
-    }
+
+    // when CDT is deleted,
+    // it also deletes all the triangles its created which are stored internally.
+    // so here we just need to clear the triangle vector only.
+
     triangles.clear();
+}
+
+void Poly2Tri::clearCDT() {
+    if(cdt != NULL) {
+        delete cdt;
+        cdt = NULL;
+    }
 }
 
 //-----------------------------------------------------------------------
@@ -108,6 +118,7 @@ void Poly2Tri::addHole(const std::vector<glm::vec2> & holePoly) {
 void Poly2Tri::update() {
     
     clearTriangles();
+    clearCDT();
     
     if(bounds.size() < 3) {
         return; // need at least 3 points to create a bounds.
@@ -117,23 +128,23 @@ void Poly2Tri::update() {
         return; // no points to triangulate with.
     }
 
-    p2t::CDT cdt(bounds);
+    cdt = new p2t::CDT(bounds);
     
     for(int i=0; i<points.size(); i++) {
-        cdt.AddPoint(points[i]);
+        cdt->AddPoint(points[i]);
     }
     
     for(int i=0; i<holes.size(); i++) {
-        cdt.AddHole(holes[i]);
+        cdt->AddHole(holes[i]);
     }
     
-    cdt.Triangulate();
+    cdt->Triangulate();
     
-    triangles = cdt.GetTriangles();
+    triangles = cdt->GetTriangles();
 }
 
 //-----------------------------------------------------------------------
-const std::vector<p2t::Triangle *> & Poly2Tri::getTriangles() const {
+std::vector<p2t::Triangle *> Poly2Tri::getTriangles() const {
     return triangles;
 }
 
