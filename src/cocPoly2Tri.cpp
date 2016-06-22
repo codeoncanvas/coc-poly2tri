@@ -1,8 +1,21 @@
-//
-//  cocPoly2Tri.cpp
-//  Created by Lukasz Karluk on 07/04/2016.
-//  http://codeoncanvas.cc
-//
+/**
+ *
+ *      ┌─┐╔═╗┌┬┐┌─┐
+ *      │  ║ ║ ││├┤
+ *      └─┘╚═╝─┴┘└─┘
+ *   ┌─┐┌─┐╔╗╔┬  ┬┌─┐┌─┐
+ *   │  ├─┤║║║└┐┌┘├─┤└─┐
+ *   └─┘┴ ┴╝╚╝ └┘ ┴ ┴└─┘
+ *
+ * Copyright (c) 2016 Code on Canvas Pty Ltd, http://CodeOnCanvas.cc
+ *
+ * This software is distributed under the MIT license
+ * https://tldrlegal.com/license/mit-license
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code
+ *
+ **/
 
 #include "cocPoly2Tri.h"
 
@@ -84,7 +97,7 @@ void Poly2Tri::setBoundsRect(float x, float y, float w, float h) {
 
 void Poly2Tri::setBoundsPoly(const std::vector<glm::vec2> & boundsPoly) {
     clearBounds();
-    
+
     for(int i=0; i<boundsPoly.size(); i++) {
         bounds.push_back(new p2t::Point(boundsPoly[i].x, boundsPoly[i].y));
     }
@@ -110,36 +123,36 @@ void Poly2Tri::addHole(const std::vector<glm::vec2> & holePoly) {
     for(int i=0; i<holePoly.size(); i++) {
         hole.push_back(new p2t::Point(holePoly[i].x, holePoly[i].y));
     }
-    
+
     holes.push_back(hole);
 }
 
 //-----------------------------------------------------------------------
 void Poly2Tri::update() {
-    
+
     clearTriangles();
     clearCDT();
-    
+
     if(bounds.size() < 3) {
         return; // need at least 3 points to create a bounds.
     }
-    
+
     if(points.size() == 0) {
         return; // no points to triangulate with.
     }
 
     cdt = new p2t::CDT(bounds);
-    
+
     for(int i=0; i<points.size(); i++) {
         cdt->AddPoint(points[i]);
     }
-    
+
     for(int i=0; i<holes.size(); i++) {
         cdt->AddHole(holes[i]);
     }
-    
+
     cdt->Triangulate();
-    
+
     triangles = cdt->GetTriangles();
 }
 
